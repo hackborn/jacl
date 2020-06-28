@@ -13,6 +13,18 @@ type CmperFactory struct {
 	Cmper Cmper `json:"cmper,omitempty"`
 }
 
+// Cmp() is a convenience function for doing the comparison.
+// It won't return an error (you can directly run the
+// comparison for that), and it will return true if there is
+// no comparison to run.
+func (f CmperFactory) Cmp(b interface{}) bool {
+	if f.Cmper == nil {
+		return true
+	}
+	ok, _ := f.Cmper.Cmp(b)
+	return ok
+}
+
 // MarshalJSON() overrides this struct's marshalling to remove the Fields layer.
 func (f CmperFactory) MarshalJSON() ([]byte, error) {
 	key := ""
