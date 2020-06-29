@@ -21,11 +21,22 @@ func (c sliceCmp) Cmp(b interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	asrc, bsrc, err := c.convert(bslice)
-	if err != nil {
-		return false, err
+
+	asrc, bsrc, err := c.convertToStringMaps(bslice)
+	if err == nil {
+		return c.cmpStringMaps(asrc, bsrc)
 	}
 
+	// If I couldn't convert to string maps, assume the slices
+	// contain literals.
+	return c.cmpSlices(c.A, bslice)
+}
+
+func (c sliceCmp) FactoryKey() string {
+	return sliceCmpFactoryKey
+}
+
+func (c sliceCmp) cmpStringMaps(asrc, bsrc []map[string]interface{}) (bool, error) {
 	for i, av := range asrc {
 		bv := c.find(c.Key, i, av, bsrc)
 		if bv == nil {
@@ -38,8 +49,16 @@ func (c sliceCmp) Cmp(b interface{}) (bool, error) {
 	return true, nil
 }
 
-func (c sliceCmp) FactoryKey() string {
-	return sliceCmpFactoryKey
+func (c sliceCmp) cmpSlices(aslice, bslice []interface{}) (bool, error) {
+	if len(aslice) != len(bslice) {
+		return false, nil
+	}
+	for i, av := range aslice {
+		if Compare(av, bslice[i]) == false {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 func (c sliceCmp) find(key string, index int, avalues map[string]interface{}, bvalues []map[string]interface{}) map[string]interface{} {
@@ -60,7 +79,29 @@ func (c sliceCmp) find(key string, index int, avalues map[string]interface{}, bv
 	return nil
 }
 
-func (c sliceCmp) convert(b []interface{}) ([]map[string]interface{}, []map[string]interface{}, error) {
+func (c sliceCmp) convertToSlices(b []interface{}) ([]interface{}, []interface{}, error) {
+	asrc := make([]interface{}, 0, 0)
+	bsrc := make([]interface{}, 0, 0)
+	for _, av := range c.A {
+		amap := make(map[string]interface{})
+		err := toFromJson(av, &amap)
+		if err != nil {
+			return nil, nil, err
+		}
+		asrc = append(asrc, amap)
+	}
+	for _, bv := range b {
+		bmap := make(map[string]interface{})
+		err := toFromJson(bv, &bmap)
+		if err != nil {
+			return nil, nil, err
+		}
+		bsrc = append(bsrc, bmap)
+	}
+	return asrc, bsrc, nil
+}
+
+func (c sliceCmp) convertToStringMaps(b []interface{}) ([]map[string]interface{}, []map[string]interface{}, error) {
 	asrc := make([]map[string]interface{}, 0, 0)
 	bsrc := make([]map[string]interface{}, 0, 0)
 	for _, av := range c.A {

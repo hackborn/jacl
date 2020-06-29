@@ -48,6 +48,9 @@ func TestSliceCmp(t *testing.T) {
 		WantResp bool
 		WantErr  error
 	}{
+		{"", []interface{}{"a"}, []interface{}{"a"}, true, nil},
+		{"", []interface{}{"a", "b"}, []interface{}{"a", "b"}, true, nil},
+		{"", []interface{}{"a"}, []interface{}{"b"}, false, nil},
 		{"", []interface{}{AT{A: "a"}}, []interface{}{AT{A: "a"}}, true, nil},
 		{"", []interface{}{AT{A: "a"}}, []interface{}{AT{A: "b"}}, false, nil},
 		{"", []interface{}{AT{A: "a"}}, []interface{}{BT{A: "a", B: "b"}}, true, nil},
