@@ -1,5 +1,9 @@
 package jacl
 
+import (
+	"fmt"
+)
+
 // ------------------------------------------------------------
 // SLICE-CMP
 
@@ -8,8 +12,8 @@ package jacl
 // as an identifier to match items in each list. If absent,
 // it assumes the list are in the correct order.
 type sliceCmp struct {
-	Key string        `json:"key,omitempty"`
-	A   []interface{} `json:"a,omitempty"`
+	Keys []string      `json:"key,omitempty"`
+	A    []interface{} `json:"a,omitempty"`
 }
 
 func (c sliceCmp) Cmp(b interface{}) (bool, error) {
@@ -38,7 +42,7 @@ func (c sliceCmp) FactoryKey() string {
 
 func (c sliceCmp) cmpStringMaps(asrc, bsrc []map[string]interface{}) (bool, error) {
 	for i, av := range asrc {
-		bv := c.find(c.Key, i, av, bsrc)
+		bv := c.find(c.Keys, i, av, bsrc)
 		if bv == nil {
 			return false, nil
 		}
@@ -61,22 +65,29 @@ func (c sliceCmp) cmpSlices(aslice, bslice []interface{}) (bool, error) {
 	return true, nil
 }
 
-func (c sliceCmp) find(key string, index int, avalues map[string]interface{}, bvalues []map[string]interface{}) map[string]interface{} {
-	if key == "" {
+func (c sliceCmp) find(keys []string, index int, avalues map[string]interface{}, bvalues []map[string]interface{}) map[string]interface{} {
+	if len(keys) < 1 {
 		if index < 0 || index >= len(bvalues) {
 			return nil
 		}
 		return bvalues[index]
 	} else {
-		if k, ok := avalues[key]; k != nil && ok {
-			for _, bv := range bvalues {
-				if bv[key] == k {
-					return bv
-				}
+		for _, bv := range bvalues {
+			if c.matches(keys, avalues, bv) {
+				return bv
 			}
 		}
 	}
 	return nil
+}
+
+func (c sliceCmp) matches(keys []string, avalues map[string]interface{}, bvalues map[string]interface{}) bool {
+	for _, key := range keys {
+		if avalues[key] != bvalues[key] {
+			return false
+		}
+	}
+	return true
 }
 
 func (c sliceCmp) convertToSlices(b []interface{}) ([]interface{}, []interface{}, error) {
@@ -121,4 +132,33 @@ func (c sliceCmp) convertToStringMaps(b []interface{}) ([]map[string]interface{}
 		bsrc = append(bsrc, bmap)
 	}
 	return asrc, bsrc, nil
+}
+
+// ------------------------------------------------------------
+// SLICE-CMP KEY
+
+func convertKey(_v interface{}) []string {
+	if _v == nil {
+		return nil
+	}
+
+	switch v := _v.(type) {
+	case string:
+		return []string{v}
+	case []string:
+		return v
+	case []interface{}:
+		var ans []string
+		for _, _vv := range v {
+			switch vv := _vv.(type) {
+			case string:
+				ans = append(ans, vv)
+			default:
+				panic(fmt.Errorf("Invalid key: %v", _v))
+			}
+		}
+		return ans
+	default:
+		panic(fmt.Errorf("Invalid key: %v", _v))
+	}
 }

@@ -42,7 +42,7 @@ func TestSingleCmp(t *testing.T) {
 
 func TestSliceCmp(t *testing.T) {
 	cases := []struct {
-		Key      string
+		Keys     interface{}
 		A        []interface{}
 		B        []interface{}
 		WantResp bool
@@ -56,10 +56,12 @@ func TestSliceCmp(t *testing.T) {
 		{"", []interface{}{AT{A: "a"}}, []interface{}{BT{A: "a", B: "b"}}, true, nil},
 		{"a", []interface{}{AT{A: "a"}}, []interface{}{BT{A: "a", B: "b"}}, true, nil},
 		{"a", []interface{}{AT{A: "a"}}, []interface{}{AT{A: "-"}, BT{A: "a", B: "b"}}, true, nil},
+		{[]string{"a", "b"}, []interface{}{BT{A: "a", B: "b"}}, []interface{}{BT{A: "a", B: "b"}}, true, nil},
+		{[]string{"a", "b"}, []interface{}{BT{A: "a", B: "b"}}, []interface{}{BT{A: "a", B: "c"}}, false, nil},
 	}
 	for i, tc := range cases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			c := Cmps(tc.Key, tc.A...)
+			c := Cmps(tc.Keys, tc.A...)
 			haveResp, haveErr := c.Cmp(tc.B)
 			if !equalErr(haveErr, tc.WantErr) {
 				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
