@@ -27,9 +27,25 @@ func Cmp(a interface{}) Cmper {
 // to find items to compare in each slice. It can be either a string,
 // if a single value is used to uniquely identify items, or a slice
 // of strings, if multiple values are required. Panic if the key is invalid.
-func Cmps(_key interface{}, a ...interface{}) Cmper {
+func Cmps(_key interface{}, _a ...interface{}) Cmper {
 	key := convertKey(_key)
-	return sliceCmp{Keys: key, A: a}
+	var a []interface{}
+	var fn []CmpsFunc
+	for _, ai := range _a {
+		switch ait := ai.(type) {
+		case CmpsFunc:
+			fn = append(fn, ait)
+		default:
+			a = append(a, ai)
+		}
+	}
+	return sliceCmp{Keys: key, A: a, Fn: fn}
+}
+
+// SizeIs() can be passed as one of the values to Cmps. It is a special
+// comparison function: Error if the result size does not match.
+func SizeIs(size int) interface{} {
+	return &sizeis{Size: size}
 }
 
 // Compare() compares two interface values. Clients can use it

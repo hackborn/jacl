@@ -75,6 +75,45 @@ func TestSliceCmp(t *testing.T) {
 }
 
 // ------------------------------------------------------------
+// TEST-EQUAL
+
+func TestEqual(t *testing.T) {
+	cases := []struct {
+		Keys     interface{}
+		A        []interface{}
+		B        []interface{}
+		WantResp bool
+		WantErr  bool
+	}{
+		{"", []interface{}{SizeIs(1), "a"}, []interface{}{"a"}, true, false},
+		{"", []interface{}{SizeIs(2), "a"}, []interface{}{"a"}, false, true},
+		{"", []interface{}{SizeIs(2), "a", "b"}, []interface{}{"a", "b"}, true, false},
+	}
+	for i, tc := range cases {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			c := Cmps(tc.Keys, tc.A...)
+			haveResp, haveErr := c.Cmp(tc.B)
+			if checkErr(haveErr, tc.WantErr) {
+				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
+				t.Fatal()
+			} else if tc.WantResp != haveResp {
+				fmt.Printf("have resp %v want match %v\n", haveResp, tc.WantResp)
+				t.Fatal()
+			}
+		})
+	}
+}
+
+func checkErr(have error, want bool) bool {
+	switch want {
+	case true:
+		return have == nil
+	default:
+		return have != nil
+	}
+}
+
+// ------------------------------------------------------------
 // TEST-CMPER-FACTORY
 
 func TestSingleCmperFactory(t *testing.T) {

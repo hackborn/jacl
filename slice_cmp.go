@@ -14,6 +14,7 @@ import (
 type sliceCmp struct {
 	Keys []string      `json:"key,omitempty"`
 	A    []interface{} `json:"a,omitempty"`
+	Fn   []CmpsFunc    `json:"fn,omitempty"`
 }
 
 func (c sliceCmp) Cmp(b interface{}) (bool, error) {
@@ -24,6 +25,13 @@ func (c sliceCmp) Cmp(b interface{}) (bool, error) {
 	err := toFromJson(b, &bslice)
 	if err != nil {
 		return false, err
+	}
+
+	for _, fn := range c.Fn {
+		err = fn.Eval(bslice)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	asrc, bsrc, err := c.convertToStringMaps(bslice)
