@@ -30,11 +30,11 @@ func Cmp(a interface{}) Cmper {
 func Cmps(_key interface{}, _a ...interface{}) Cmper {
 	key := convertKey(_key)
 	var a []interface{}
-	var fn []CmpsFunc
+	var fn []FuncFactory
 	for _, ai := range _a {
 		switch ait := ai.(type) {
 		case CmpsFunc:
-			fn = append(fn, ait)
+			fn = append(fn, FuncFactory{Fn: ait})
 		default:
 			a = append(a, ai)
 		}

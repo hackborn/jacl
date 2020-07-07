@@ -14,7 +14,7 @@ import (
 type sliceCmp struct {
 	Keys []string      `json:"key,omitempty"`
 	A    []interface{} `json:"a,omitempty"`
-	Fn   []CmpsFunc    `json:"fn,omitempty"`
+	Fn   []FuncFactory `json:"fn,omitempty"`
 }
 
 func (c sliceCmp) Cmp(b interface{}) (bool, error) {
