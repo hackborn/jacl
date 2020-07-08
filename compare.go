@@ -38,3 +38,18 @@ func compareStringInterfaceMap(a, b map[string]interface{}) bool {
 	}
 	return true
 }
+
+// compareInterfaceSlice() compares two maps of string to interface.
+func compareInterfaceSlice(a, b []interface{}) bool {
+	if len(a) != len(b) {
+		return false
+	} else if a == nil {
+		return true
+	}
+	for i, ae := range a {
+		if !Compare(ae, b[i]) {
+			return false
+		}
+	}
+	return true
+}

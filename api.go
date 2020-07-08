@@ -61,6 +61,11 @@ func Compare(a, b interface{}) bool {
 			return compareStringInterfaceMap(av, bv)
 		}
 		return false
+	case []interface{}:
+		if bv, ok := b.([]interface{}); ok {
+			return compareInterfaceSlice(av, bv)
+		}
+		return false
 	}
 	return a == b
 }
