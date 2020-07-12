@@ -5,6 +5,10 @@ import (
 	"fmt"
 )
 
+// ------------------------------------------------------------
+// CMPS-FUNC
+
+// CmpsFunc defines behaviour objects that can be sent to a Cmps().
 type CmpsFunc interface {
 	Eval(resp []interface{}) error
 
@@ -12,18 +16,38 @@ type CmpsFunc interface {
 	FactoryKey() string
 }
 
-type sizeis struct {
+// ------------------------------------------------------------
+// KEY-FN FUNCTION
+
+// keyFn defines what keys to use when identifying an item in a slice.
+type keyFn struct {
+	Keys []string `json:"keys,omitempty"`
+}
+
+func (f keyFn) Eval(resp []interface{}) error {
+	return nil
+}
+
+func (f keyFn) FactoryKey() string {
+	return keyFactoryKey
+}
+
+// ------------------------------------------------------------
+// SIZEIS-FN FUNCTION
+
+// sizeis is a function to evaluate the size of a slice.
+type sizeisFn struct {
 	Size int `json:"size,omitempty"`
 }
 
-func (f sizeis) Eval(resp []interface{}) error {
+func (f sizeisFn) Eval(resp []interface{}) error {
 	if len(resp) == f.Size {
 		return nil
 	}
-	return fmt.Errorf("Size mismatch, have %v want %v", len(resp), f.Size)
+	return newComparisonError(fmt.Sprintf("Size mismatch, have %v want %v", len(resp), f.Size))
 }
 
-func (f sizeis) FactoryKey() string {
+func (f sizeisFn) FactoryKey() string {
 	return sizeisFactoryKey
 }
 
@@ -65,8 +89,12 @@ func (f *FuncFactory) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	switch glue.Key {
+	case keyFactoryKey:
+		fn := &keyFn{}
+		err = toFromJson(glue.Fn, fn)
+		f.Fn = fn
 	case sizeisFactoryKey:
-		fn := &sizeis{}
+		fn := &sizeisFn{}
 		err = toFromJson(glue.Fn, fn)
 		f.Fn = fn
 	}
@@ -82,5 +110,6 @@ type funcFactoryGlue struct {
 // CONST and VAR
 
 const (
+	keyFactoryKey    = "jacl-key"
 	sizeisFactoryKey = "jacl-sizeis"
 )

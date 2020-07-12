@@ -14,22 +14,20 @@ type CmperFactory struct {
 }
 
 // Cmp() is a convenience function for doing the comparison.
-// It won't return an error (you can directly run the
-// comparison for that), and it will return true if there is
-// no comparison to run.
-func (f CmperFactory) Cmp(b interface{}) bool {
+func (f CmperFactory) Cmp(b interface{}) error {
 	if f.Cmper == nil {
-		return true
+		return nil
 	}
-	ok, _ := f.Cmper.Cmp(b)
-	return ok
+	return f.Cmper.Cmp(b)
 }
 
 // MarshalJSON() overrides this struct's marshalling to remove the Fields layer.
 func (f CmperFactory) MarshalJSON() ([]byte, error) {
 	key := ""
 	if f.Cmper != nil {
-		key = f.Cmper.FactoryKey()
+		if s, ok := f.Cmper.(serializer); ok {
+			key = s.SerializeKey()
+		}
 	}
 	glue := cmperFactoryGlue{key, f.Cmper}
 	return json.Marshal(glue)
@@ -58,6 +56,15 @@ func (f *CmperFactory) UnmarshalJSON(data []byte) error {
 type cmperFactoryGlue struct {
 	Key   string      `json:"key,omitempty"`
 	Cmper interface{} `json:"cmper,omitempty"`
+}
+
+// ------------------------------------------------------------
+// SERIALIZER
+
+// serializer defines items that can be serialized to a CmperFactory.
+type serializer interface {
+	// Answer a unique key so I can be reinstantiated after marshalling.
+	SerializeKey() string
 }
 
 // ------------------------------------------------------------

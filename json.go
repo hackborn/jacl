@@ -29,3 +29,17 @@ func toFromJson(pairs ...interface{}) error {
 	}
 	return nil
 }
+
+// ------------------------------------------------------------
+// TO-JSON
+
+// toJson() is a very specialized function that just tries to
+// turn anything into a json string, returning the original if
+// it fails, ignoring all errors.
+func toJson(d interface{}) interface{} {
+	b, err := json.Marshal(d)
+	if err != nil {
+		return d
+	}
+	return string(b)
+}

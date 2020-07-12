@@ -1,0 +1,7 @@
+{
+	"//NOTE": "To use this file, copy it to settings.json and configure as desired",
+
+	"want_tests": [],
+	"//want_tests_readme": "A list of test function names you want to run. Used to narrow tests during debugging. You can optionally set an index to run a specific test case.",
+	"//want_tests_example": ["TestGetSharedContent", "TestScripting:3"]
+}

@@ -1,5 +1,9 @@
 package jacl
 
+import (
+	"fmt"
+)
+
 // ------------------------------------------------------------
 // SINGLE-CMP
 
@@ -8,11 +12,14 @@ type singleCmp struct {
 	A interface{} `json:"a,omitempty"`
 }
 
-func (c singleCmp) Cmp(b interface{}) (bool, error) {
+func (c singleCmp) Cmp(b interface{}) error {
 	// Handle simple comparisons.
 	ans, err := compareBasicTypes(c.A, b)
 	if err == nil {
-		return ans, nil
+		if ans {
+			return nil
+		}
+		return newComparisonError(fmt.Sprintf("have %v want %v", toJson(b), toJson(c.A)))
 	}
 
 	// Handle complex comparisons.
@@ -20,16 +27,16 @@ func (c singleCmp) Cmp(b interface{}) (bool, error) {
 	bmap := make(map[string]interface{})
 	err = toFromJson(c.A, &amap, b, &bmap)
 	if err != nil {
-		return false, err
+		return newEvaluationError(err)
 	}
 	for k, av := range amap {
 		if Compare(av, bmap[k]) == false {
-			return false, nil
+			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(b), toJson(c.A)))
 		}
 	}
-	return true, nil
+	return nil
 }
 
-func (c singleCmp) FactoryKey() string {
+func (c singleCmp) SerializeKey() string {
 	return singleCmpFactoryKey
 }

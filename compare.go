@@ -1,5 +1,9 @@
 package jacl
 
+import (
+	"fmt"
+)
+
 // compareBasicTypes() compares basic types.
 func compareBasicTypes(a, b interface{}) (bool, error) {
 	if a == nil && b == nil {
@@ -15,7 +19,7 @@ func compareBasicTypes(a, b interface{}) (bool, error) {
 			return av == bv, nil
 		}
 	}
-	return false, errIncomparable
+	return false, fmt.Errorf("Can't compare %T with %T", a, b)
 }
 
 // compareStringInterfaceMap() compares two maps of string to interface.

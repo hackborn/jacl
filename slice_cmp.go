@@ -17,20 +17,20 @@ type sliceCmp struct {
 	Fn   []FuncFactory `json:"fn,omitempty"`
 }
 
-func (c sliceCmp) Cmp(b interface{}) (bool, error) {
+func (c sliceCmp) Cmp(b interface{}) error {
 	if c.A == nil && b == nil {
-		return true, nil
+		return nil
 	}
 	bslice := make([]interface{}, 0, 0)
 	err := toFromJson(b, &bslice)
 	if err != nil {
-		return false, err
+		return newEvaluationError(err)
 	}
 
 	for _, fn := range c.Fn {
 		err = fn.Eval(bslice)
 		if err != nil {
-			return false, err
+			return newEvaluationError(err)
 		}
 	}
 
@@ -44,33 +44,33 @@ func (c sliceCmp) Cmp(b interface{}) (bool, error) {
 	return c.cmpSlices(c.A, bslice)
 }
 
-func (c sliceCmp) FactoryKey() string {
+func (c sliceCmp) SerializeKey() string {
 	return sliceCmpFactoryKey
 }
 
-func (c sliceCmp) cmpStringMaps(asrc, bsrc []map[string]interface{}) (bool, error) {
+func (c sliceCmp) cmpStringMaps(asrc, bsrc []map[string]interface{}) error {
 	for i, av := range asrc {
 		bv := c.find(c.Keys, i, av, bsrc)
 		if bv == nil {
-			return false, nil
+			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(bsrc), toJson(asrc)))
 		}
 		if Compare(av, bv) == false {
-			return false, nil
+			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(bsrc), toJson(asrc)))
 		}
 	}
-	return true, nil
+	return nil
 }
 
-func (c sliceCmp) cmpSlices(aslice, bslice []interface{}) (bool, error) {
+func (c sliceCmp) cmpSlices(aslice, bslice []interface{}) error {
 	if len(aslice) != len(bslice) {
-		return false, nil
+		return newComparisonError(fmt.Sprintf("have length %v want length %v", len(bslice), len(aslice)))
 	}
 	for i, av := range aslice {
 		if Compare(av, bslice[i]) == false {
-			return false, nil
+			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(bslice), toJson(aslice)))
 		}
 	}
-	return true, nil
+	return nil
 }
 
 func (c sliceCmp) find(keys []string, index int, avalues map[string]interface{}, bvalues []map[string]interface{}) map[string]interface{} {
@@ -140,33 +140,4 @@ func (c sliceCmp) convertToStringMaps(b []interface{}) ([]map[string]interface{}
 		bsrc = append(bsrc, bmap)
 	}
 	return asrc, bsrc, nil
-}
-
-// ------------------------------------------------------------
-// SLICE-CMP KEY
-
-func convertKey(_v interface{}) []string {
-	if _v == nil {
-		return nil
-	}
-
-	switch v := _v.(type) {
-	case string:
-		return []string{v}
-	case []string:
-		return v
-	case []interface{}:
-		var ans []string
-		for _, _vv := range v {
-			switch vv := _vv.(type) {
-			case string:
-				ans = append(ans, vv)
-			default:
-				panic(fmt.Errorf("Invalid key: %v", _v))
-			}
-		}
-		return ans
-	default:
-		panic(fmt.Errorf("Invalid key: %v", _v))
-	}
 }

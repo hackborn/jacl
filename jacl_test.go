@@ -6,31 +6,55 @@ import (
 )
 
 // ------------------------------------------------------------
-// TEST-SINGLE-CMP
+// TEST-COMPARE
 
-func TestSingleCmp(t *testing.T) {
+func TestCompare(t *testing.T) {
 	cases := []struct {
 		A        interface{}
 		B        interface{}
 		WantResp bool
-		WantErr  error
 	}{
-		{"a", "a", true, nil},
-		{"a", "b", false, nil},
-		{AT{A: "a"}, AT{A: "a"}, true, nil},
-		{AT{A: "a"}, AT{A: "b"}, false, nil},
-		{AT{A: "a"}, BT{A: "a"}, true, nil},
-		{AT{A: "a"}, BT{A: "a", B: "b"}, true, nil},
+		{[]interface{}{"a", "b"}, []interface{}{"a", "b"}, true},
 	}
 	for i, tc := range cases {
+		if !ShouldRunTest(i) {
+			continue
+		}
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			haveResp := Compare(tc.A, tc.B)
+			if haveResp != tc.WantResp {
+				fmt.Printf("have %v want %v\n", toJson(tc.B), toJson(tc.A))
+				t.Fatal()
+			}
+		})
+	}
+}
+
+// ------------------------------------------------------------
+// TEST-SINGLE-CMP
+
+func TestSingleCmp(t *testing.T) {
+	cases := []struct {
+		A       interface{}
+		B       interface{}
+		WantErr error
+	}{
+		{"a", "a", nil},
+		{"a", "b", cmpErr},
+		{AT{A: "a"}, AT{A: "a"}, nil},
+		{AT{A: "a"}, AT{A: "b"}, cmpErr},
+		{AT{A: "a"}, BT{A: "a"}, nil},
+		{AT{A: "a"}, BT{A: "a", B: "b"}, nil},
+	}
+	for i, tc := range cases {
+		if !ShouldRunTest(i) {
+			continue
+		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			c := Cmp(tc.A)
-			haveResp, haveErr := c.Cmp(tc.B)
+			haveErr := c.Cmp(tc.B)
 			if !equalErr(haveErr, tc.WantErr) {
 				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
-				t.Fatal()
-			} else if tc.WantResp != haveResp {
-				fmt.Printf("have resp %v want match %v\n", haveResp, tc.WantResp)
 				t.Fatal()
 			}
 		})
@@ -42,32 +66,27 @@ func TestSingleCmp(t *testing.T) {
 
 func TestSliceCmp(t *testing.T) {
 	cases := []struct {
-		Keys     interface{}
-		A        []interface{}
-		B        []interface{}
-		WantResp bool
-		WantErr  error
+		A       []interface{}
+		B       []interface{}
+		WantErr error
 	}{
-		{"", []interface{}{"a"}, []interface{}{"a"}, true, nil},
-		{"", []interface{}{"a", "b"}, []interface{}{"a", "b"}, true, nil},
-		{"", []interface{}{"a"}, []interface{}{"b"}, false, nil},
-		{"", []interface{}{AT{A: "a"}}, []interface{}{AT{A: "a"}}, true, nil},
-		{"", []interface{}{AT{A: "a"}}, []interface{}{AT{A: "b"}}, false, nil},
-		{"", []interface{}{AT{A: "a"}}, []interface{}{BT{A: "a", B: "b"}}, true, nil},
-		{"a", []interface{}{AT{A: "a"}}, []interface{}{BT{A: "a", B: "b"}}, true, nil},
-		{"a", []interface{}{AT{A: "a"}}, []interface{}{AT{A: "-"}, BT{A: "a", B: "b"}}, true, nil},
-		{[]string{"a", "b"}, []interface{}{BT{A: "a", B: "b"}}, []interface{}{BT{A: "a", B: "b"}}, true, nil},
-		{[]string{"a", "b"}, []interface{}{BT{A: "a", B: "b"}}, []interface{}{BT{A: "a", B: "c"}}, false, nil},
+		{[]interface{}{"a"}, []interface{}{"a"}, nil},
+		{[]interface{}{"a", "b"}, []interface{}{"a", "b"}, nil},
+		{[]interface{}{"a"}, []interface{}{"b"}, cmpErr},
+		{[]interface{}{AT{A: "a"}}, []interface{}{AT{A: "a"}}, nil},
+		{[]interface{}{AT{A: "a"}}, []interface{}{AT{A: "b"}}, cmpErr},
+		{[]interface{}{AT{A: "a"}}, []interface{}{BT{A: "a", B: "b"}}, nil},
+		{[]interface{}{BT{A: "d", B: "e"}, BT{A: "a", B: "b"}}, []interface{}{BT{A: "a", B: "c"}}, cmpErr},
 	}
 	for i, tc := range cases {
+		if !ShouldRunTest(i) {
+			continue
+		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			c := Cmps(tc.Keys, tc.A...)
-			haveResp, haveErr := c.Cmp(tc.B)
+			c := Cmps(tc.A...)
+			haveErr := c.Cmp(tc.B)
 			if !equalErr(haveErr, tc.WantErr) {
 				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
-				t.Fatal()
-			} else if tc.WantResp != haveResp {
-				fmt.Printf("have resp %v want match %v\n", haveResp, tc.WantResp)
 				t.Fatal()
 			}
 		})
@@ -75,41 +94,63 @@ func TestSliceCmp(t *testing.T) {
 }
 
 // ------------------------------------------------------------
-// TEST-EQUAL
+// TEST-SLICE-KEY
 
-func TestEqual(t *testing.T) {
+func TestSliceKey(t *testing.T) {
 	cases := []struct {
-		Keys     interface{}
-		A        []interface{}
-		B        []interface{}
-		WantResp bool
-		WantErr  bool
+		A       []interface{}
+		B       []interface{}
+		WantErr error
 	}{
-		{"", []interface{}{SizeIs(1), "a"}, []interface{}{"a"}, true, false},
-		{"", []interface{}{SizeIs(2), "a"}, []interface{}{"a"}, false, true},
-		{"", []interface{}{SizeIs(2), "a", "b"}, []interface{}{"a", "b"}, true, false},
+		{[]interface{}{Key("a"), AT{A: "a"}}, []interface{}{BT{A: "a", B: "b"}}, nil},
+		{[]interface{}{Key("a"), AT{A: "a"}}, []interface{}{AT{A: "-"}, BT{A: "a", B: "b"}}, nil},
+		{[]interface{}{Key("a", "b"), BT{A: "a", B: "b"}}, []interface{}{BT{A: "a", B: "b"}}, nil},
+		{[]interface{}{Key("a", "b"), BT{A: "a", B: "b"}}, []interface{}{BT{A: "a", B: "c"}}, cmpErr},
+		// Everything in A must be in B, even with keys. This is testing unordered comparisons.
+		{[]interface{}{Key("a", "b"), BT{A: "d", B: "e"}, BT{A: "a", B: "b"}}, []interface{}{BT{A: "a", B: "b"}}, cmpErr},
+		// But B can have more than A. This is testing unordered comparisons.
+		{[]interface{}{Key("a", "b"), BT{A: "a", B: "b"}}, []interface{}{BT{A: "d", B: "e"}, BT{A: "a", B: "b"}}, nil},
 	}
 	for i, tc := range cases {
+		if !ShouldRunTest(i) {
+			continue
+		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			c := Cmps(tc.Keys, tc.A...)
-			haveResp, haveErr := c.Cmp(tc.B)
-			if checkErr(haveErr, tc.WantErr) {
+			c := Cmps(tc.A...)
+			haveErr := c.Cmp(tc.B)
+			if !equalErr(haveErr, tc.WantErr) {
 				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
-				t.Fatal()
-			} else if tc.WantResp != haveResp {
-				fmt.Printf("have resp %v want match %v\n", haveResp, tc.WantResp)
 				t.Fatal()
 			}
 		})
 	}
 }
 
-func checkErr(have error, want bool) bool {
-	switch want {
-	case true:
-		return have == nil
-	default:
-		return have != nil
+// ------------------------------------------------------------
+// TEST-SLICE-SIZEIS
+
+func TestSliceSizeis(t *testing.T) {
+	cases := []struct {
+		A       []interface{}
+		B       []interface{}
+		WantErr error
+	}{
+		{[]interface{}{SizeIs(1), "a"}, []interface{}{"a"}, nil},
+		{[]interface{}{SizeIs(2), "a"}, []interface{}{"a"}, cmpErr},
+		{[]interface{}{SizeIs(2), "a", "b"}, []interface{}{"a", "b"}, nil},
+	}
+	for i, tc := range cases {
+		if !ShouldRunTest(i) {
+			continue
+		}
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			c := Cmps(tc.A...)
+			haveErr := c.Cmp(tc.B)
+			if !equalErr(haveErr, tc.WantErr) {
+				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
+				t.Fatal()
+			}
+		})
 	}
 }
 
@@ -133,15 +174,16 @@ func TestSingleCmperFactory(t *testing.T) {
 			if err != nil {
 				panic(err)
 			}
-			haveResp, haveErr := output.Cmper.Cmp(tc.Req.A)
-			if tc.Req.FactoryKey() != output.Cmper.FactoryKey() {
-				fmt.Printf("wrong key have %v want %v\n", output.Cmper.FactoryKey(), tc.Req.FactoryKey())
+			haveErr := output.Cmper.Cmp(tc.Req.A)
+			outputKey := ""
+			if s, ok := output.Cmper.(serializer); ok {
+				outputKey = s.SerializeKey()
+			}
+			if tc.Req.SerializeKey() != outputKey {
+				fmt.Printf("wrong key have %v want %v\n", outputKey, tc.Req.SerializeKey())
 				t.Fatal()
 			} else if !equalErr(haveErr, tc.WantErr) {
 				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
-				t.Fatal()
-			} else if haveResp != true {
-				fmt.Printf("failed want %v\n", tc.Req.A)
 				t.Fatal()
 			}
 		})
@@ -165,3 +207,11 @@ type CT struct {
 	B interface{} `json:"b,omitempty"`
 	C interface{} `json:"c,omitempty"`
 }
+
+// ------------------------------------------------------------
+// CONST and VAR
+
+var (
+	cmpErr  = newComparisonError("")
+	evalErr = newEvaluationError(nil)
+)
