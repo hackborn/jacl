@@ -62,33 +62,3 @@ func Key(v ...string) interface{} {
 func SizeIs(size int) interface{} {
 	return &sizeisFn{Size: size}
 }
-
-// ------------------------------------------------------------
-// COMPARE
-
-// Compare() compares two interface values. Clients can use it
-// directly instead of going through the Cmper interface.
-//
-// This is the same function used by Cmper, with the same behaviour:
-// All element of a must be in b, but not vice versa. It does not
-// handle custom types, but assumes the values have been reduced
-// to primitives.
-func Compare(a, b interface{}) bool {
-	ans, err := compareBasicTypes(a, b)
-	if err == nil {
-		return ans
-	}
-	switch av := a.(type) {
-	case map[string]interface{}:
-		if bv, ok := b.(map[string]interface{}); ok {
-			return compareStringInterfaceMap(av, bv)
-		}
-		return false
-	case []interface{}:
-		if bv, ok := b.([]interface{}); ok {
-			return compareInterfaceSlice(av, bv)
-		}
-		return false
-	}
-	return a == b
-}

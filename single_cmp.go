@@ -22,7 +22,13 @@ func (c singleCmp) Cmp(b interface{}) error {
 		return newComparisonError(fmt.Sprintf("have %v want %v", toJson(b), toJson(c.A)))
 	}
 
-	// Handle complex comparisons.
+	// Handle slice comparisons.
+	handled, err := c.cmpAsSlices(c.A, b)
+	if handled {
+		return err
+	}
+
+	// Handle map comparisons.
 	amap := make(map[string]interface{})
 	bmap := make(map[string]interface{})
 	err = toFromJson(c.A, &amap, b, &bmap)
@@ -30,7 +36,7 @@ func (c singleCmp) Cmp(b interface{}) error {
 		return newEvaluationError(err)
 	}
 	for k, av := range amap {
-		if Compare(av, bmap[k]) == false {
+		if !compare(av, bmap[k]) {
 			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(b), toJson(c.A)))
 		}
 	}
@@ -39,4 +45,23 @@ func (c singleCmp) Cmp(b interface{}) error {
 
 func (c singleCmp) SerializeKey() string {
 	return singleCmpFactoryKey
+}
+
+func (c singleCmp) cmpAsSlices(_a, _b interface{}) (bool, error) {
+	// Need to encode/decode the data to eliminate variations in slice type
+	var aslice []interface{}
+	var bslice []interface{}
+	err := toFromJson(_a, &aslice, _b, &bslice)
+	if err != nil {
+		return false, err
+	}
+	if len(aslice) != len(bslice) {
+		return true, newComparisonError(fmt.Sprintf("have length %v want length %v", len(bslice), len(aslice)))
+	}
+	for i, ai := range aslice {
+		if !compare(ai, bslice[i]) {
+			return true, newComparisonError(fmt.Sprintf("have %v want %v", toJson(bslice), toJson(aslice)))
+		}
+	}
+	return true, nil
 }

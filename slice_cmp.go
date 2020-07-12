@@ -54,7 +54,7 @@ func (c sliceCmp) cmpStringMaps(asrc, bsrc []map[string]interface{}) error {
 		if bv == nil {
 			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(bsrc), toJson(asrc)))
 		}
-		if Compare(av, bv) == false {
+		if !compare(av, bv) {
 			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(bsrc), toJson(asrc)))
 		}
 	}
@@ -66,7 +66,7 @@ func (c sliceCmp) cmpSlices(aslice, bslice []interface{}) error {
 		return newComparisonError(fmt.Sprintf("have length %v want length %v", len(bslice), len(aslice)))
 	}
 	for i, av := range aslice {
-		if Compare(av, bslice[i]) == false {
+		if !compare(av, bslice[i]) {
 			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(bslice), toJson(aslice)))
 		}
 	}

@@ -21,7 +21,7 @@ func TestCompare(t *testing.T) {
 			continue
 		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			haveResp := Compare(tc.A, tc.B)
+			haveResp := compare(tc.A, tc.B)
 			if haveResp != tc.WantResp {
 				fmt.Printf("have %v want %v\n", toJson(tc.B), toJson(tc.A))
 				t.Fatal()
@@ -165,8 +165,13 @@ func TestSingleCmperFactory(t *testing.T) {
 		{singleCmp{}, nil},
 		{singleCmp{A: "a"}, nil},
 		{singleCmp{A: BT{A: "a", B: "b"}}, nil},
+		{singleCmp{A: []string{"a", "b"}}, nil},
+		{singleCmp{A: []interface{}{"a", "b"}}, nil},
 	}
 	for i, tc := range cases {
+		if !ShouldRunTest(i) {
+			continue
+		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			input := CmperFactory{Cmper: tc.Req}
 			output := CmperFactory{}

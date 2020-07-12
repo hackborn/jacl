@@ -4,6 +4,30 @@ import (
 	"fmt"
 )
 
+// compare() compares two interface values.
+// All element of a must be in b, but not vice versa. It does not
+// handle custom types, but assumes the values have been reduced
+// to primitives.
+func compare(a, b interface{}) bool {
+	ans, err := compareBasicTypes(a, b)
+	if err == nil {
+		return ans
+	}
+	switch av := a.(type) {
+	case map[string]interface{}:
+		if bv, ok := b.(map[string]interface{}); ok {
+			return compareStringInterfaceMap(av, bv)
+		}
+		return false
+	case []interface{}:
+		if bv, ok := b.([]interface{}); ok {
+			return compareInterfaceSlice(av, bv)
+		}
+		return false
+	}
+	return a == b
+}
+
 // compareBasicTypes() compares basic types.
 func compareBasicTypes(a, b interface{}) (bool, error) {
 	if a == nil && b == nil {
@@ -36,7 +60,7 @@ func compareStringInterfaceMap(a, b map[string]interface{}) bool {
 		if !ok {
 			return false
 		}
-		if !Compare(av, bv) {
+		if !compare(av, bv) {
 			return false
 		}
 	}
@@ -51,7 +75,7 @@ func compareInterfaceSlice(a, b []interface{}) bool {
 		return true
 	}
 	for i, ae := range a {
-		if !Compare(ae, b[i]) {
+		if !compare(ae, b[i]) {
 			return false
 		}
 	}
