@@ -17,7 +17,7 @@ func TestCompare(t *testing.T) {
 		{[]interface{}{"a", "b"}, []interface{}{"a", "b"}, true},
 	}
 	for i, tc := range cases {
-		if !ShouldRunTest(i) {
+		if !WantTestCase(i) {
 			continue
 		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
@@ -47,7 +47,7 @@ func TestSingleCmp(t *testing.T) {
 		{AT{A: "a"}, BT{A: "a", B: "b"}, nil},
 	}
 	for i, tc := range cases {
-		if !ShouldRunTest(i) {
+		if !WantTestCase(i) {
 			continue
 		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
@@ -79,7 +79,7 @@ func TestSliceCmp(t *testing.T) {
 		{[]interface{}{BT{A: "d", B: "e"}, BT{A: "a", B: "b"}}, []interface{}{BT{A: "a", B: "c"}}, cmpErr},
 	}
 	for i, tc := range cases {
-		if !ShouldRunTest(i) {
+		if !WantTestCase(i) {
 			continue
 		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
@@ -112,7 +112,7 @@ func TestSliceKey(t *testing.T) {
 		{[]interface{}{Key("a", "b"), BT{A: "a", B: "b"}}, []interface{}{BT{A: "d", B: "e"}, BT{A: "a", B: "b"}}, nil},
 	}
 	for i, tc := range cases {
-		if !ShouldRunTest(i) {
+		if !WantTestCase(i) {
 			continue
 		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
@@ -140,7 +140,7 @@ func TestSliceSizeis(t *testing.T) {
 		{[]interface{}{SizeIs(2), "a", "b"}, []interface{}{"a", "b"}, nil},
 	}
 	for i, tc := range cases {
-		if !ShouldRunTest(i) {
+		if !WantTestCase(i) {
 			continue
 		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
@@ -169,7 +169,7 @@ func TestSingleCmperFactory(t *testing.T) {
 		{singleCmp{A: []interface{}{"a", "b"}}, nil},
 	}
 	for i, tc := range cases {
-		if !ShouldRunTest(i) {
+		if !WantTestCase(i) {
 			continue
 		}
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {

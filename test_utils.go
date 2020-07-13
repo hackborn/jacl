@@ -9,29 +9,40 @@ import (
 	"strings"
 )
 
-// ------------------------------------------------------------
-// SHOULD-RUN-TEST-OPTS
-
-type ShouldRunTestOpts struct {
+type WantTestOpts struct {
 	Filename string // The settings file name.
 }
 
-// ------------------------------------------------------------
-// SHOULD-RUN-TEST
-
-func ShouldRunTest(caseIndex int) bool {
-	opts := ShouldRunTestOpts{Filename: filepath.Join("./testdata", "settings.json")}
-	return ShouldRunTestWith(caseIndex, opts)
+// WantTest answers true if the current test should run.
+// If no tests are configured, all tests run. Tests are configured via
+// a settings file, by default located at testdata/settings.json.
+//
+// This is a utility function ancillary to the main package. It's included
+// because it is being used as part of the testing, and I exposed it because
+// it's handy for other clients, also.
+func WantTest() bool {
+	return WantTestCase(-1)
 }
 
-// ShouldRunTest() answers true if we want the test at the supplied
-// index to run. If no tests are configured, run all tests. To configure
-// a test see testdata/settings.json::want_tests.
+// WantTestCase answers true if the current test case should run.
+// If no tests are configured, all tests run. Tests are configured via
+// a settings file, by default located at testdata/settings.json.
 //
-// This is a utility function ancillary to the main package function.
-// It's included because it is being used as part of the testing, and
-// I exposed it because it's handy for other clients, also.
-func ShouldRunTestWith(caseIndex int, opts ShouldRunTestOpts) bool {
+// This is a utility function ancillary to the main package. It's included
+// because it is being used as part of the testing, and I exposed it because
+// it's handy for other clients, also.
+func WantTestCase(caseIndex int) bool {
+	return WantTestCaseWith(caseIndex, WantTestOpts{})
+}
+
+// WantTestCaseWith answers true if the current test case should run.
+// If no tests are configured, all tests run. Tests are configured via
+// a settings file, by default located at testdata/settings.json.
+//
+// This is a utility function ancillary to the main package. It's included
+// because it is being used as part of the testing, and I exposed it because
+// it's handy for other clients, also.
+func WantTestCaseWith(caseIndex int, opts WantTestOpts) bool {
 	// Load desired tests from settings
 	tests := loadTests(opts)
 	if len(tests) < 1 {
@@ -52,7 +63,11 @@ func ShouldRunTestWith(caseIndex int, opts ShouldRunTestOpts) bool {
 
 // loadTests() loads my test list from the settings, answering
 // a map of test names and the desired index for each.
-func loadTests(opts ShouldRunTestOpts) map[string]int {
+func loadTests(opts WantTestOpts) map[string]int {
+	fn := opts.Filename
+	if fn == "" {
+		fn = filepath.Join("./testdata", "settings.json")
+	}
 	contents, err := ioutil.ReadFile(opts.Filename)
 	if err != nil {
 		return nil
