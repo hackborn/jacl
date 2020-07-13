@@ -207,16 +207,9 @@ type BT struct {
 	B interface{} `json:"b,omitempty"`
 }
 
-type CT struct {
-	A interface{} `json:"a,omitempty"`
-	B interface{} `json:"b,omitempty"`
-	C interface{} `json:"c,omitempty"`
-}
-
 // ------------------------------------------------------------
 // CONST and VAR
 
 var (
-	cmpErr  = newComparisonError("")
-	evalErr = newEvaluationError(nil)
+	cmpErr = newComparisonError("")
 )

@@ -65,7 +65,7 @@ func equalErr(a, b error) bool {
 // ------------------------------------------------------------
 // CONST and VAR
 
-var (
-//	errIncomparable = fmt.Errorf("Incomparable")
-
+const (
+	haveWantFmt       = "have %v want %v"
+	haveWantLengthFmt = "have length %v want length %v"
 )

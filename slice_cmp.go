@@ -21,7 +21,7 @@ func (c sliceCmp) Cmp(b interface{}) error {
 	if c.A == nil && b == nil {
 		return nil
 	}
-	bslice := make([]interface{}, 0, 0)
+	bslice := make([]interface{}, 0)
 	err := toFromJson(b, &bslice)
 	if err != nil {
 		return newEvaluationError(err)
@@ -52,10 +52,10 @@ func (c sliceCmp) cmpStringMaps(asrc, bsrc []map[string]interface{}) error {
 	for i, av := range asrc {
 		bv := c.find(c.Keys, i, av, bsrc)
 		if bv == nil {
-			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(bsrc), toJson(asrc)))
+			return newComparisonError(fmt.Sprintf(haveWantFmt, toJson(bsrc), toJson(asrc)))
 		}
 		if !compare(av, bv) {
-			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(bsrc), toJson(asrc)))
+			return newComparisonError(fmt.Sprintf(haveWantFmt, toJson(bsrc), toJson(asrc)))
 		}
 	}
 	return nil
@@ -63,11 +63,11 @@ func (c sliceCmp) cmpStringMaps(asrc, bsrc []map[string]interface{}) error {
 
 func (c sliceCmp) cmpSlices(aslice, bslice []interface{}) error {
 	if len(aslice) != len(bslice) {
-		return newComparisonError(fmt.Sprintf("have length %v want length %v", len(bslice), len(aslice)))
+		return newComparisonError(fmt.Sprintf(haveWantLengthFmt, len(bslice), len(aslice)))
 	}
 	for i, av := range aslice {
 		if !compare(av, bslice[i]) {
-			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(bslice), toJson(aslice)))
+			return newComparisonError(fmt.Sprintf(haveWantFmt, toJson(bslice), toJson(aslice)))
 		}
 	}
 	return nil
@@ -98,31 +98,9 @@ func (c sliceCmp) matches(keys []string, avalues map[string]interface{}, bvalues
 	return true
 }
 
-func (c sliceCmp) convertToSlices(b []interface{}) ([]interface{}, []interface{}, error) {
-	asrc := make([]interface{}, 0, 0)
-	bsrc := make([]interface{}, 0, 0)
-	for _, av := range c.A {
-		amap := make(map[string]interface{})
-		err := toFromJson(av, &amap)
-		if err != nil {
-			return nil, nil, err
-		}
-		asrc = append(asrc, amap)
-	}
-	for _, bv := range b {
-		bmap := make(map[string]interface{})
-		err := toFromJson(bv, &bmap)
-		if err != nil {
-			return nil, nil, err
-		}
-		bsrc = append(bsrc, bmap)
-	}
-	return asrc, bsrc, nil
-}
-
 func (c sliceCmp) convertToStringMaps(b []interface{}) ([]map[string]interface{}, []map[string]interface{}, error) {
-	asrc := make([]map[string]interface{}, 0, 0)
-	bsrc := make([]map[string]interface{}, 0, 0)
+	asrc := make([]map[string]interface{}, 0)
+	bsrc := make([]map[string]interface{}, 0)
 	for _, av := range c.A {
 		amap := make(map[string]interface{})
 		err := toFromJson(av, &amap)

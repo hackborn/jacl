@@ -19,7 +19,7 @@ func (c singleCmp) Cmp(b interface{}) error {
 		if ans {
 			return nil
 		}
-		return newComparisonError(fmt.Sprintf("have %v want %v", toJson(b), toJson(c.A)))
+		return newComparisonError(fmt.Sprintf(haveWantFmt, toJson(b), toJson(c.A)))
 	}
 
 	// Handle slice comparisons.
@@ -37,7 +37,7 @@ func (c singleCmp) Cmp(b interface{}) error {
 	}
 	for k, av := range amap {
 		if !compare(av, bmap[k]) {
-			return newComparisonError(fmt.Sprintf("have %v want %v", toJson(b), toJson(c.A)))
+			return newComparisonError(fmt.Sprintf(haveWantFmt, toJson(b), toJson(c.A)))
 		}
 	}
 	return nil
@@ -56,11 +56,11 @@ func (c singleCmp) cmpAsSlices(_a, _b interface{}) (bool, error) {
 		return false, err
 	}
 	if len(aslice) != len(bslice) {
-		return true, newComparisonError(fmt.Sprintf("have length %v want length %v", len(bslice), len(aslice)))
+		return true, newComparisonError(fmt.Sprintf(haveWantLengthFmt, len(bslice), len(aslice)))
 	}
 	for i, ai := range aslice {
 		if !compare(ai, bslice[i]) {
-			return true, newComparisonError(fmt.Sprintf("have %v want %v", toJson(bslice), toJson(aslice)))
+			return true, newComparisonError(fmt.Sprintf(haveWantFmt, toJson(bslice), toJson(aslice)))
 		}
 	}
 	return true, nil

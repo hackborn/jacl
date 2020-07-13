@@ -43,7 +43,7 @@ func compareBasicTypes(a, b interface{}) (bool, error) {
 			return av == bv, nil
 		}
 	}
-	return false, fmt.Errorf("Can't compare %T with %T", a, b)
+	return false, fmt.Errorf("can't compare %T with %T", a, b)
 }
 
 // compareStringInterfaceMap() compares two maps of string to interface.
