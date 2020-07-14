@@ -68,7 +68,7 @@ func loadTests(opts WantTestOpts) map[string]int {
 	if fn == "" {
 		fn = filepath.Join("./testdata", "settings.json")
 	}
-	contents, err := ioutil.ReadFile(opts.Filename)
+	contents, err := ioutil.ReadFile(fn)
 	if err != nil {
 		return nil
 	}
