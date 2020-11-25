@@ -46,6 +46,13 @@ func Cmps(_a ...interface{}) Cmper {
 	return sliceCmp{Keys: key, A: a, Fn: fn}
 }
 
+// NilCmp() constructs a new comparison object that fails
+// if the comparison is not nil.
+// of string -> interface{}.
+func CmpNil() Cmper {
+	return nilCmp{}
+}
+
 // ------------------------------------------------------------
 // CMPS FUNCS
 

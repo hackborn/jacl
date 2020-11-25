@@ -41,6 +41,8 @@ func (f *CmperFactory) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	switch glue.Key {
+	case nilCmpFactoryKey:
+		f.Cmper = &nilCmp{}
 	case singleCmpFactoryKey:
 		c := &singleCmp{}
 		err = toFromJson(glue.Cmper, c)
@@ -71,6 +73,7 @@ type serializer interface {
 // CONST and VAR
 
 const (
+	nilCmpFactoryKey    = "jacl-nilcmp"
 	singleCmpFactoryKey = "jacl-singlecmp"
 	sliceCmpFactoryKey  = "jacl-slicecmp"
 )

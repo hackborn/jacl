@@ -31,6 +31,32 @@ func TestCompare(t *testing.T) {
 }
 
 // ------------------------------------------------------------
+// TEST-NIL-CMP
+
+func TestNilCmp(t *testing.T) {
+	cases := []struct {
+		B       interface{}
+		WantErr error
+	}{
+		{nil, nil},
+		{"a", cmpErr},
+	}
+	for i, tc := range cases {
+		if !WantTestCase(i) {
+			continue
+		}
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			c := CmpNil()
+			haveErr := c.Cmp(tc.B)
+			if !equalErr(haveErr, tc.WantErr) {
+				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
+				t.Fatal()
+			}
+		})
+	}
+}
+
+// ------------------------------------------------------------
 // TEST-SINGLE-CMP
 
 func TestSingleCmp(t *testing.T) {
