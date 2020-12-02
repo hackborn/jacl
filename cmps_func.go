@@ -45,7 +45,7 @@ func (f notExistsFn) Eval(resps []interface{}) error {
 	// against slices, so we need to evaluate against each item
 	// in the slice.
 	for _, resp := range resps {
-		if f.existsI(f.Path, resp) {
+		if f.existsI(f.Path, resp, false) {
 			return newComparisonError(fmt.Sprintf("exists: %v", f.Path))
 		}
 	}
@@ -56,7 +56,7 @@ func (f notExistsFn) FactoryKey() string {
 	return notExistsFactoryKey
 }
 
-func (f notExistsFn) existsI(needle []string, _haystack interface{}) bool {
+func (f notExistsFn) existsI(needle []string, _haystack interface{}, converted bool) bool {
 	if len(needle) < 1 {
 		return false
 	}
@@ -68,12 +68,21 @@ func (f notExistsFn) existsI(needle []string, _haystack interface{}) bool {
 			if len(needle) == 1 {
 				return true
 			}
-			return f.existsI(needle[1:], v)
+			return f.existsI(needle[1:], v, converted)
 		} else {
 			return false
 		}
 	default:
-		panic("unhandled type")
+		// Convert unknown types into a known format
+		if converted {
+			panic("unhandled type")
+		}
+		m := make(map[string]interface{})
+		err := toFromJson(_haystack, &m)
+		if err != nil {
+			panic(err)
+		}
+		return f.existsI(needle, m, true)
 	}
 	return false
 }
