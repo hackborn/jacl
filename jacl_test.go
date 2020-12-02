@@ -153,6 +153,37 @@ func TestSliceKey(t *testing.T) {
 }
 
 // ------------------------------------------------------------
+// TEST-SLICE-NOTEXISTS
+
+func TestSliceNotexists(t *testing.T) {
+	cases := []struct {
+		A       []interface{}
+		B       []interface{}
+		WantErr error
+	}{
+		{[]interface{}{NotExists("a")}, []interface{}{"a"}, &ComparisonError{}},
+		{[]interface{}{NotExists("b")}, []interface{}{"a"}, nil},
+		// Path to a generic object
+		{[]interface{}{NotExists("a", "b")}, []interface{}{map[string]string{"a": "b"}}, &ComparisonError{}},
+		{[]interface{}{NotExists("a", "b")}, []interface{}{map[string]string{"a": "c"}}, nil},
+		{[]interface{}{NotExists("a")}, []interface{}{map[string]string{"a": "c"}}, &ComparisonError{}},
+	}
+	for i, tc := range cases {
+		if !WantTestCase(i) {
+			continue
+		}
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			c := Cmps(tc.A...)
+			haveErr := c.Cmp(tc.B)
+			if !equalErr(haveErr, tc.WantErr) {
+				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
+				t.Fatal()
+			}
+		})
+	}
+}
+
+// ------------------------------------------------------------
 // TEST-SLICE-SIZEIS
 
 func TestSliceSizeis(t *testing.T) {
@@ -181,7 +212,7 @@ func TestSliceSizeis(t *testing.T) {
 }
 
 // ------------------------------------------------------------
-// TEST-CMPER-FACTORY
+// TEST-SINGLE-CMPER-FACTORY
 
 func TestSingleCmperFactory(t *testing.T) {
 	cases := []struct {
@@ -220,6 +251,53 @@ func TestSingleCmperFactory(t *testing.T) {
 		})
 	}
 }
+
+// ------------------------------------------------------------
+// TEST-SLICE-CMPER-FACTORY
+
+/*
+func TestSliceCmperFactory(t *testing.T) {
+	cases := []struct {
+		Req     sliceCmp
+		WantErr error
+	}{
+		//		{sliceCmp{}, nil},
+		{sliceCmp{}.addFn(NotExists("a")), nil},
+	}
+	for i, tc := range cases {
+		if !WantTestCase(i) {
+			continue
+		}
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			input := CmperFactory{Cmper: tc.Req}
+			output := CmperFactory{}
+			err := toFromJson(input, &output)
+			if err != nil {
+				panic(err)
+			}
+			//			fmt.Println("BEFORE", input, "AFTER", output, "TYPE", output.Keys, "A", output.A, "FN", output.Fn)
+			if sc, ok := output.Cmper.(*sliceCmp); ok {
+				fmt.Println("BEFORE", input, "AFTER", sc)
+			} else {
+				fmt.Printf("TYPE IS %t\n", output.Cmper)
+			}
+			panic("sds")
+			haveErr := output.Cmper.Cmp(tc.Req.A)
+			outputKey := ""
+			if s, ok := output.Cmper.(serializer); ok {
+				outputKey = s.SerializeKey()
+			}
+			if tc.Req.SerializeKey() != outputKey {
+				fmt.Printf("wrong key have %v want %v\n", outputKey, tc.Req.SerializeKey())
+				t.Fatal()
+			} else if !equalErr(haveErr, tc.WantErr) {
+				fmt.Printf("have err %v want %v\n", haveErr, tc.WantErr)
+				t.Fatal()
+			}
+		})
+	}
+}
+*/
 
 // ------------------------------------------------------------
 // COMPARISON TYPES

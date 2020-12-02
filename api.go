@@ -15,14 +15,14 @@ type Cmper interface {
 	Cmp(b interface{}) error
 }
 
-// Cmp() constructs a new comparison object. It can be used
+// Cmp constructs a new comparison object. It can be used
 // against a single item. The item must resolve to a map
 // of string -> interface{}.
 func Cmp(a interface{}) Cmper {
 	return singleCmp{A: a}
 }
 
-// Cmps() constructs a new comparison object to be used against a
+// Cmps constructs a new comparison object to be used against a
 // slice of items. Each item in the slice must resolve
 // to a map of string -> interface{}.
 //
@@ -46,7 +46,7 @@ func Cmps(_a ...interface{}) Cmper {
 	return sliceCmp{Keys: key, A: a, Fn: fn}
 }
 
-// NilCmp() constructs a new comparison object that fails
+// CmpNil constructs a new comparison object that fails
 // if the comparison is not nil.
 // of string -> interface{}.
 func CmpNil() Cmper {
@@ -56,7 +56,7 @@ func CmpNil() Cmper {
 // ------------------------------------------------------------
 // CMPS FUNCS
 
-// Key() can be passed as one of the values to Cmps(). It is a special
+// Key can be passed as one of the values to Cmps(). It is a special
 // matching function: It defines what keys are used to determine identity
 // between the two slices being compared. This can be used to compare
 // slices of unequal size, or slices in different orders.
@@ -64,7 +64,14 @@ func Key(v ...string) interface{} {
 	return &keyFn{Keys: v}
 }
 
-// SizeIs() can be passed as one of the values to Cmps(). It is a special
+// NotExists constructs a not exists comparison: The comparison will fail
+// if the supplied field exists in the result. You can match against
+// hierarchical results by supplying a path down to the desired field.
+func NotExists(path ...string) interface{} {
+	return &notExistsFn{Path: path}
+}
+
+// SizeIs can be passed as one of the values to Cmps(). It is a special
 // comparison function: Error if the result size does not match.
 func SizeIs(size int) interface{} {
 	return &sizeisFn{Size: size}

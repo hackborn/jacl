@@ -13,7 +13,7 @@ type CmperFactory struct {
 	Cmper Cmper `json:"cmper,omitempty"`
 }
 
-// Cmp() is a convenience function for doing the comparison.
+// Cmp is a convenience function for doing the comparison.
 func (f CmperFactory) Cmp(b interface{}) error {
 	if f.Cmper == nil {
 		return nil
@@ -21,7 +21,7 @@ func (f CmperFactory) Cmp(b interface{}) error {
 	return f.Cmper.Cmp(b)
 }
 
-// MarshalJSON() overrides this struct's marshalling to remove the Fields layer.
+// MarshalJSON overrides this struct's marshalling to remove the Fields layer.
 func (f CmperFactory) MarshalJSON() ([]byte, error) {
 	key := ""
 	if f.Cmper != nil {
@@ -33,7 +33,7 @@ func (f CmperFactory) MarshalJSON() ([]byte, error) {
 	return json.Marshal(glue)
 }
 
-// UnmarshalJSON() overrides this struct's unmarshalling to remove the Fields layer.
+// UnmarshalJSON overrides this struct's unmarshalling to remove the Fields layer.
 func (f *CmperFactory) UnmarshalJSON(data []byte) error {
 	glue := cmperFactoryGlue{}
 	err := json.Unmarshal(data, &glue)

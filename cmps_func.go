@@ -33,6 +33,52 @@ func (f keyFn) FactoryKey() string {
 }
 
 // ------------------------------------------------------------
+// NOT-EXISTS-FN FUNCTION
+
+// notExistsFn provides a path to a field that should not exist.
+type notExistsFn struct {
+	Path []string `json:"path,omitempty"`
+}
+
+func (f notExistsFn) Eval(resps []interface{}) error {
+	// This is slightly confusing but the functions are designed
+	// against slices, so we need to evaluate against each item
+	// in the slice.
+	for _, resp := range resps {
+		if f.existsI(f.Path, resp) {
+			return newComparisonError(fmt.Sprintf("exists: %v", f.Path))
+		}
+	}
+	return nil
+}
+
+func (f notExistsFn) FactoryKey() string {
+	return notExistsFactoryKey
+}
+
+func (f notExistsFn) existsI(needle []string, _haystack interface{}) bool {
+	if len(needle) < 1 {
+		return false
+	}
+	switch haystack := _haystack.(type) {
+	case string:
+		return needle[0] == haystack
+	case map[string]interface{}:
+		if v, ok := haystack[needle[0]]; ok {
+			if len(needle) == 1 {
+				return true
+			}
+			return f.existsI(needle[1:], v)
+		} else {
+			return false
+		}
+	default:
+		panic("unhandled type")
+	}
+	return false
+}
+
+// ------------------------------------------------------------
 // SIZEIS-FN FUNCTION
 
 // sizeis is a function to evaluate the size of a slice.
@@ -93,6 +139,10 @@ func (f *FuncFactory) UnmarshalJSON(data []byte) error {
 		fn := &keyFn{}
 		err = toFromJson(glue.Fn, fn)
 		f.Fn = fn
+	case notExistsFactoryKey:
+		fn := &notExistsFn{}
+		err = toFromJson(glue.Fn, fn)
+		f.Fn = fn
 	case sizeisFactoryKey:
 		fn := &sizeisFn{}
 		err = toFromJson(glue.Fn, fn)
@@ -110,6 +160,7 @@ type funcFactoryGlue struct {
 // CONST and VAR
 
 const (
-	keyFactoryKey    = "jacl-key"
-	sizeisFactoryKey = "jacl-sizeis"
+	keyFactoryKey       = "jacl-key"
+	notExistsFactoryKey = "jacl-notexists"
+	sizeisFactoryKey    = "jacl-sizeis"
 )

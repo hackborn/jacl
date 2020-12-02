@@ -33,6 +33,12 @@ func (c sliceCmp) Cmp(b interface{}) error {
 			return newEvaluationError(err)
 		}
 	}
+	// If we have functions but no data, we don't
+	// perform a comparison. This handles the case where
+	// the comparison is nothing but not-exists checks.
+	if len(c.Fn) > 0 && len(c.A) < 1 {
+		return nil
+	}
 
 	asrc, bsrc, err := c.convertToStringMaps(bslice)
 	if err == nil {
@@ -46,6 +52,14 @@ func (c sliceCmp) Cmp(b interface{}) error {
 
 func (c sliceCmp) SerializeKey() string {
 	return sliceCmpFactoryKey
+}
+
+func (c sliceCmp) addFn(_fn interface{}) sliceCmp {
+	if fn, ok := _fn.(CmpsFunc); ok {
+		c.Fn = append(c.Fn, FuncFactory{Fn: fn})
+		return c
+	}
+	panic("unknown func")
 }
 
 func (c sliceCmp) cmpStringMaps(asrc, bsrc []map[string]interface{}) error {
